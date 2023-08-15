@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import ResponseData from "../helpers/ResponseData";
 import Role from "../db/models/Role";
 
 const GetRole = async (req: Request, res: Response): Promise<Response> => {
@@ -9,25 +10,11 @@ const GetRole = async (req: Request, res: Response): Promise<Response> => {
       },
     });
 
-    return res.status(200).send({
-      status: 200,
-      message: "OK",
-      data: data,
-    });
-  } catch (error: any) {
-    if (error !== null && error instanceof Error) {
-      return res.status(500).send({
-        status: 500,
-        message: error.message,
-        errors: error,
-      });
-    }
-
-    return res.status(500).send({
-      status: 500,
-      message: "Internal Server Error",
-      errors: error,
-    });
+    return res
+      .status(200)
+      .send(ResponseData(200, "Successfully Get All Role", null, data));
+  } catch (error) {
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 
@@ -40,25 +27,11 @@ const CreateRole = async (req: Request, res: Response): Promise<Response> => {
       active,
     });
 
-    return res.status(201).send({
-      status: 201,
-      message: "Success Created Role",
-      data: create,
-    });
+    return res
+      .status(201)
+      .send(ResponseData(201, "Success Created Role", null, create));
   } catch (error) {
-    if (error !== null && error instanceof Error) {
-      return res.status(500).send({
-        status: 500,
-        message: error.message,
-        errors: error,
-      });
-    }
-
-    return res.status(500).send({
-      status: 500,
-      message: "Internal Server Error",
-      errors: error,
-    });
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 
@@ -72,7 +45,7 @@ const UpdateRole = async (req: Request, res: Response): Promise<Response> => {
     if (!role) {
       return res
         .status(404)
-        .send({ status: 404, message: "Data not found", data: null });
+        .send(ResponseData(404, "Data not found", null, null));
     }
 
     role.roleName = roleName;
@@ -82,21 +55,9 @@ const UpdateRole = async (req: Request, res: Response): Promise<Response> => {
 
     return res
       .status(200)
-      .send({ status: 200, message: "Successfully Update Role", data: role });
+      .send(ResponseData(200, "Success Update Role", null, role));
   } catch (error) {
-    if (error !== null && error instanceof Error) {
-      return res.status(500).send({
-        status: 500,
-        message: error.message,
-        errors: error,
-      });
-    }
-
-    return res.status(500).send({
-      status: 500,
-      message: "Internal Server Error",
-      errors: error,
-    });
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 
@@ -109,28 +70,16 @@ const DeleteRole = async (req: Request, res: Response): Promise<Response> => {
     if (!role) {
       return res
         .status(404)
-        .send({ status: 404, message: "Data not found", data: null });
+        .send(ResponseData(404, "Data not found", null, null));
     }
 
     await role.destroy();
 
     return res
       .status(200)
-      .send({ status: 200, message: "Succesfully Deleted Role", data: null });
+      .send(ResponseData(200, "Successfully Deleted Role", null, null));
   } catch (error) {
-    if (error !== null && error instanceof Error) {
-      return res.status(500).send({
-        status: 500,
-        message: error.message,
-        errors: error,
-      });
-    }
-
-    return res.status(500).send({
-      status: 500,
-      message: "Internal Server Error",
-      errors: error,
-    });
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 
@@ -143,28 +92,14 @@ const GetRoleById = async (req: Request, res: Response): Promise<Response> => {
     if (!role) {
       return res
         .status(404)
-        .send({ status: 404, message: "Data not found", data: null });
+        .send(ResponseData(404, "Data not found", null, null));
     }
 
-    return res.status(200).send({
-      status: 200,
-      message: "OK",
-      data: role,
-    });
+    return res
+      .status(200)
+      .send(ResponseData(200, "Get Role By Id", null, role));
   } catch (error) {
-    if (error !== null && error instanceof Error) {
-      return res.status(500).send({
-        status: 500,
-        message: error.message,
-        errors: error,
-      });
-    }
-
-    return res.status(500).send({
-      status: 500,
-      message: "Internal Server Error",
-      errors: error,
-    });
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 

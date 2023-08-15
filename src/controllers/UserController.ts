@@ -1,14 +1,16 @@
-import { Request, Response, NextFunction } from "express";
-import PasswordHelpers from "../helpers/PasswordHelpers";
-import Helpers from "../helpers/Helpers";
-import User from "../db/models/User";
-import Role from "../db/models/Role";
+import { Request, Response } from "express";
+import { GenerateRefreshToken, GenerateToken } from "../helpers/token/Generate";
+import { ExtractRefreshToken } from "../helpers/token/Extract";
+import { User, Role } from "../db/models/";
+import { PasswordHashing, PasswordCompare } from "../helpers/PasswordHelpers";
+import ResponseData from "../helpers/ResponseData";
 
 const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { fullName, username, email, password, confirmPassword } = req.body;
+    const { fullName, username, email, password, roleId, confirmPassword } =
+      req.body;
 
-    const hashed = await PasswordHelpers.PasswordHashing(password);
+    const hashed = await PasswordHashing(password);
 
     const data = await User.create({
       fullName,
@@ -17,14 +19,14 @@ const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
       password: hashed,
       active: true,
       verified: true,
-      roleId: 3,
+      roleId: roleId,
     });
 
     return res
       .status(201)
-      .send(Helpers.ResponseData(201, "Success Created User", null, data));
+      .send(ResponseData(201, "Success Created User", null, data));
   } catch (error) {
-    return res.status(500).send(Helpers.ResponseData(500, "", error, null));
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 
@@ -45,18 +47,15 @@ const LoginUser = async (req: Request, res: Response): Promise<Response> => {
     if (!user) {
       return res
         .status(401)
-        .send(Helpers.ResponseData(401, "Unauthorized", null, null));
+        .send(ResponseData(401, "Unauthorized", null, null));
     }
 
-    const matched = await PasswordHelpers.PasswordCompare(
-      password,
-      user.password
-    );
+    const matched = await PasswordCompare(password, user.password);
 
     if (!matched) {
       return res
         .status(401)
-        .send(Helpers.ResponseData(401, "Unauthorized", null, null));
+        .send(ResponseData(401, "Unauthorized", null, null));
     }
 
     const dataUser = {
@@ -68,8 +67,8 @@ const LoginUser = async (req: Request, res: Response): Promise<Response> => {
       active: user.active,
     };
 
-    const token = Helpers.GenerateToken(dataUser);
-    const refreshToken = Helpers.GenerateRefreshToken(dataUser);
+    const token = GenerateToken(dataUser);
+    const refreshToken = GenerateRefreshToken(dataUser);
 
     user.accessToken = refreshToken;
 
@@ -89,11 +88,9 @@ const LoginUser = async (req: Request, res: Response): Promise<Response> => {
       token: token,
     };
 
-    return res
-      .status(200)
-      .send(Helpers.ResponseData(200, "OK", null, responseUser));
+    return res.status(200).send(ResponseData(200, "OK", null, responseUser));
   } catch (error) {
-    return res.status(500).send(Helpers.ResponseData(500, "", error, null));
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 
@@ -104,18 +101,18 @@ const RefreshToken = async (req: Request, res: Response): Promise<Response> => {
     if (!refreshToken) {
       return res
         .status(401)
-        .send(Helpers.ResponseData(401, "Unauthorized", null, null));
+        .send(ResponseData(401, "Unauthorized", null, null));
     }
 
-    const decodedUser = Helpers.ExtractRefreshToken(refreshToken);
+    const decodedUser = ExtractRefreshToken(refreshToken);
 
     if (!decodedUser) {
       return res
         .status(401)
-        .send(Helpers.ResponseData(401, "Unauthorized", null, null));
+        .send(ResponseData(401, "Unauthorized", null, null));
     }
 
-    const token = Helpers.GenerateToken({
+    const token = GenerateToken({
       id: decodedUser.id,
       username: decodedUser.username,
       email: decodedUser.email,
@@ -134,11 +131,9 @@ const RefreshToken = async (req: Request, res: Response): Promise<Response> => {
       token: token,
     };
 
-    return res
-      .status(200)
-      .send(Helpers.ResponseData(200, "OK", null, resultUser));
+    return res.status(200).send(ResponseData(200, "OK", null, resultUser));
   } catch (error) {
-    return res.status(500).send(Helpers.ResponseData(500, "", error, null));
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 
@@ -159,15 +154,15 @@ const UserDetail = async (req: Request, res: Response): Promise<Response> => {
     if (!user) {
       return res
         .status(404)
-        .send(Helpers.ResponseData(404, "User not found", null, null));
+        .send(ResponseData(404, "User not found", null, null));
     }
 
     user.password = "";
     user.accessToken = "";
 
-    return res.status(200).send(Helpers.ResponseData(200, "OK", null, user));
+    return res.status(200).send(ResponseData(200, "OK", null, user));
   } catch (error) {
-    return res.status(500).send(Helpers.ResponseData(500, "", error, null));
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 
@@ -176,9 +171,7 @@ const UserLogout = async (req: Request, res: Response): Promise<Response> => {
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
-      return res
-        .status(200)
-        .send(Helpers.ResponseData(200, "User Logout", null, null));
+      return res.status(200).send(ResponseData(200, "User Logout", null, null));
     }
 
     const userId = res.locals.userId;
@@ -186,18 +179,14 @@ const UserLogout = async (req: Request, res: Response): Promise<Response> => {
 
     if (!user) {
       res.clearCookie("refreshToken");
-      return res
-        .status(200)
-        .send(Helpers.ResponseData(200, "User Logout", null, null));
+      return res.status(200).send(ResponseData(200, "User Logout", null, null));
     }
 
     await user.update({ accessToken: null }, { where: { id: userId } });
     res.clearCookie("refreshToken");
-    return res
-      .status(200)
-      .send(Helpers.ResponseData(200, "User Logout", null, null));
+    return res.status(200).send(ResponseData(200, "User Logout", null, null));
   } catch (error) {
-    return res.status(500).send(Helpers.ResponseData(500, "", error, null));
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 

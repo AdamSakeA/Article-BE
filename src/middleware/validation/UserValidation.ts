@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import Helpers from "../../helpers/Helpers";
+import ResponseData from "../../helpers/ResponseData";
 import Validator, { Rules } from "validatorjs";
 import User from "../../db/models/User";
 
@@ -26,7 +26,7 @@ const RegisterValidation = async (
     if (validate.fails()) {
       return res
         .status(400)
-        .send(Helpers.ResponseData(400, "Bad Request", validate.errors, null));
+        .send(ResponseData(400, "Bad Request", validate.errors, null));
     }
 
     const userEmail = await User.findOne({
@@ -49,7 +49,7 @@ const RegisterValidation = async (
       };
       return res
         .status(400)
-        .send(Helpers.ResponseData(400, "Bad Request", errorData, null));
+        .send(ResponseData(400, "Bad Request", errorData, null));
     }
 
     if (userEmail) {
@@ -60,12 +60,12 @@ const RegisterValidation = async (
       };
       return res
         .status(400)
-        .send(Helpers.ResponseData(400, "Bad Request", errorData, null));
+        .send(ResponseData(400, "Bad Request", errorData, null));
     }
 
     next();
   } catch (error) {
-    return res.status(500).send(Helpers.ResponseData(500, "", error, null));
+    return res.status(500).send(ResponseData(500, "", error, null));
   }
 };
 

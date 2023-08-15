@@ -15,4 +15,4 @@ const PasswordCompare = async (
   return matched;
 };
 
-export default { PasswordCompare, PasswordHashing };
+export { PasswordCompare, PasswordHashing };
