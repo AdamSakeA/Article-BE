@@ -3,6 +3,7 @@ import ResponseData from "../../helpers/ResponseData";
 import Validator, { Rules } from "validatorjs";
 import MasterMenu from "../../db/models/MasterMenu";
 import SubMenu from "../../db/models/SubMenu";
+import { Role } from "../../db/models";
 
 const CreateMenuValidation = async (
   req: Request,
@@ -104,6 +105,24 @@ const CreateSubMenuValidation = async (
         .send(ResponseData(400, "Bad Request", validate.errors, null));
     }
 
+    const masterMenu = await MasterMenu.findOne({
+      where: {
+        id: masterMenuId,
+        active: true,
+      },
+    });
+
+    if (!masterMenu) {
+      const errorData = {
+        errors: {
+          masterMenuId: ["Master menu's not found"],
+        },
+      };
+      return res
+        .status(400)
+        .send(ResponseData(400, "Bad Request", errorData, null));
+    }
+
     const subMenuName = await SubMenu.findOne({
       where: {
         name: data.name,
@@ -161,4 +180,76 @@ const CreateSubMenuValidation = async (
   }
 };
 
-export default { CreateMenuValidation, CreateSubMenuValidation };
+const CreateRoleMenuAccess = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { roleId, subMenuId } = req.body;
+
+    const data = {
+      roleId,
+      subMenuId,
+    };
+
+    const rules: Rules = {
+      roleId: "required|integer",
+      subMenuId: "required|integer",
+    };
+
+    const validate = new Validator(data, rules);
+
+    if (validate.fails()) {
+      return res
+        .status(400)
+        .send(ResponseData(400, "Bad Request", validate.errors, null));
+    }
+
+    const role = await Role.findOne({
+      where: {
+        id: roleId,
+        active: true,
+      },
+    });
+
+    if (!role) {
+      const errorData = {
+        errors: {
+          roleId: ["Role's not found"],
+        },
+      };
+      return res
+        .status(400)
+        .send(ResponseData(400, "Bad Request", errorData, null));
+    }
+
+    const subMenu = await SubMenu.findOne({
+      where: {
+        id: subMenuId,
+        active: true,
+      },
+    });
+
+    if (!subMenu) {
+      const errorData = {
+        errors: {
+          subMenuId: ["SubMenu not found"],
+        },
+      };
+      return res
+        .status(400)
+        .send(ResponseData(400, "Bad Request", errorData, null));
+    }
+
+    next();
+  } catch (error) {
+    return res.status(500).send(ResponseData(500, "", error, null));
+  }
+};
+
+export default {
+  CreateMenuValidation,
+  CreateSubMenuValidation,
+  CreateRoleMenuAccess,
+};

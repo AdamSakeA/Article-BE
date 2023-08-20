@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
+import { Op } from "sequelize";
 import { GenerateRefreshToken, GenerateToken } from "../helpers/token/Generate";
 import { ExtractRefreshToken } from "../helpers/token/Extract";
 import { User, Role } from "../db/models/";
+import RoleMenuAccess from "../db/models/RoleMenuAccess";
+import MasterMenu from "../db/models/MasterMenu";
+import SubMenu from "../db/models/SubMenu";
 import { PasswordHashing, PasswordCompare } from "../helpers/PasswordHelpers";
 import ResponseData from "../helpers/ResponseData";
 
@@ -79,6 +83,33 @@ const LoginUser = async (req: Request, res: Response): Promise<Response> => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
+    const roleAccess = await RoleMenuAccess.findAll({
+      where: {
+        roleId: user.roleId,
+        active: true,
+      },
+    });
+
+    const listSubMenuId = roleAccess.map((item) => {
+      return item.subMenuId;
+    });
+
+    const menuAccess = await MasterMenu.findAll({
+      where: {
+        active: true,
+      },
+      order: [
+        ["ordering", "ASC"],
+        [SubMenu, "ordering", "ASC"],
+      ],
+      include: {
+        model: SubMenu,
+        where: {
+          id: { [Op.in]: listSubMenuId },
+        },
+      },
+    });
+
     const responseUser = {
       username: user.username,
       email: user.email,
@@ -86,6 +117,7 @@ const LoginUser = async (req: Request, res: Response): Promise<Response> => {
       verified: user.verified,
       active: user.active,
       token: token,
+      menuAccess: menuAccess,
     };
 
     return res.status(200).send(ResponseData(200, "OK", null, responseUser));

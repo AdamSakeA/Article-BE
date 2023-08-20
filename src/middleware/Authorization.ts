@@ -35,7 +35,7 @@ const SuperUserRole = (req: Request, res: Response, next: NextFunction) => {
     const roleId: number = res.locals.roleId;
 
     if (roleId !== 1) {
-      return res.status(403).send(ResponseData(401, "Forbbiden", null, null));
+      return res.status(403).send(ResponseData(403, "Forbbiden", null, null));
     }
 
     next();
@@ -49,7 +49,7 @@ const AdminRole = (req: Request, res: Response, next: NextFunction) => {
     const roleId: number = res.locals.roleId;
 
     if (roleId !== 2) {
-      return res.status(403).send(ResponseData(401, "Forbbiden", null, null));
+      return res.status(403).send(ResponseData(403, "Forbbiden", null, null));
     }
 
     next();
@@ -63,7 +63,7 @@ const UserRole = (req: Request, res: Response, next: NextFunction) => {
     const roleId: number = res.locals.roleId;
 
     if (roleId !== 3) {
-      return res.status(403).send(ResponseData(401, "Forbbiden", null, null));
+      return res.status(403).send(ResponseData(403, "Forbbiden", null, null));
     }
 
     next();
@@ -77,7 +77,7 @@ const AdminAndSuperRole = (req: Request, res: Response, next: NextFunction) => {
     const roleId: number = res.locals.roleId;
 
     if (roleId !== 1 && roleId !== 2) {
-      return res.status(403).send(ResponseData(401, "Forbbiden", null, null));
+      return res.status(403).send(ResponseData(403, "Forbbiden", null, null));
     }
 
     next();
